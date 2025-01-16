@@ -4,6 +4,8 @@ from sqlalchemy import UniqueConstraint, create_engine, text, MetaData, Table, C
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 import time
+from sqlalchemy.pool import QueuePool
+from contextlib import contextmanager
 
 class DatabaseManager:
     def __init__(self):
@@ -20,10 +22,12 @@ class DatabaseManager:
         )
         return create_engine(
             db_url,
-            pool_size=20,  # Increased pool size
-            max_overflow=30,  # Allow more overflow connections
-            pool_timeout=60,  # Increased timeout
-            pool_pre_ping=True
+            poolclass=QueuePool,
+            pool_size=30,
+            max_overflow=40,
+            pool_timeout=30,
+            pool_pre_ping=True,
+            pool_recycle=3600
         )
 
     def _create_table(self):
@@ -44,9 +48,14 @@ class DatabaseManager:
             Column('created_at', DateTime, default=datetime.utcnow),
             UniqueConstraint('symbol', 'date', name='unique_symbol_date')
         )
+        
         try:
-            self.metadata.drop_all(self.engine)
             self.metadata.create_all(self.engine)
+            with self.engine.connect() as conn:
+                conn.execute(text("""
+                    CREATE INDEX IF NOT EXISTS idx_symbol_date 
+                    ON stock_data (symbol, date);
+                """))
             print("Database table created successfully")
         except SQLAlchemyError as e:
             print(f"Error creating table: {e}")
@@ -59,27 +68,34 @@ class DatabaseManager:
         # Prepare batch insert values
         values = []
         for row in data_rows:
-            processed_row = {
-                'symbol': row['symbol'],
-                'date': row['date'],
-                'last_trade_price': float(str(row['last_trade_price']).replace(',', '')),
-                'max_price': float(str(row['max_price']).replace(',', '')),
-                'min_price': float(str(row['min_price']).replace(',', '')),
-                'avg_price': float(str(row['avg_price']).replace(',', '')),
-                'change_percentage': float(str(row['change_percentage']).replace(',', '')),
-                'volume': int(float(str(row['volume']).replace(',', ''))),
-                'turnover_best': float(str(row['turnover_best']).replace(',', '')),
-                'total_turnover': float(str(row['total_turnover']).replace(',', ''))
-            }
-            values.append(processed_row)
+            try:
+                values.append({
+                    'symbol': row['symbol'],
+                    'date': row['date'],
+                    'last_trade_price': float(str(row['last_trade_price']).replace(',', '')),
+                    'max_price': float(str(row['max_price']).replace(',', '')),
+                    'min_price': float(str(row['min_price']).replace(',', '')),
+                    'avg_price': float(str(row['avg_price']).replace(',', '')),
+                    'change_percentage': float(str(row['change_percentage']).replace(',', '')),
+                    'volume': int(float(str(row['volume']).replace(',', ''))),
+                    'turnover_best': float(str(row['turnover_best']).replace(',', '')),
+                    'total_turnover': float(str(row['total_turnover']).replace(',', ''))
+                })
+            except (ValueError, TypeError) as e:
+                print(f"Error processing row: {e}")
+                continue
 
-        # Batch insert with single query
+        if not values:
+            return True
+
+        # Use a simpler batch insert query
         query = text("""
             INSERT INTO stock_data (
                 symbol, date, last_trade_price, max_price,
                 min_price, avg_price, change_percentage,
                 volume, turnover_best, total_turnover
-            ) VALUES (
+            ) 
+            VALUES (
                 :symbol, :date, :last_trade_price, :max_price,
                 :min_price, :avg_price, :change_percentage,
                 :volume, :turnover_best, :total_turnover
@@ -96,18 +112,18 @@ class DatabaseManager:
         """)
 
         max_retries = 3
-        retry_delay = 0.5  # Reduced initial delay
+        retry_delay = 0.2
 
         for attempt in range(max_retries):
             try:
                 with self.engine.begin() as connection:
                     connection.execute(query, values)
-                print(f"Saved {len(data_rows)} records to database")
+                print(f"Saved {len(values)} records to database")
                 return True
             except SQLAlchemyError as e:
-                if "connection slots are reserved" in str(e) and attempt < max_retries - 1:
+                if attempt < max_retries - 1:
                     time.sleep(retry_delay)
-                    retry_delay *= 1.5  # Gentler backoff
+                    retry_delay *= 1.5
                     continue
                 print(f"Error saving to database: {e}")
                 return False
@@ -121,8 +137,7 @@ class DatabaseManager:
                     WHERE symbol = :symbol
                 """)
                 result = connection.execute(query, {"symbol": symbol})
-                last_date = result.scalar()
-                return last_date
+                return result.scalar()
         except SQLAlchemyError as e:
             print(f"Error getting last date: {e}")
             return None

@@ -5,6 +5,10 @@ from requests.sessions import Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import time
+import json
+import os
+import hashlib
+import pandas as pd
 
 class DataFetcherFilter:
     def __init__(self):
@@ -16,6 +20,72 @@ class DataFetcherFilter:
             allowed_methods=["GET"]
         )
         self.timeout = (5, 15)
+        
+        # Ensure directories exist
+        self.raw_dir = os.path.join("data", "raw")
+        self.processed_dir = os.path.join("data", "processed")
+        os.makedirs(self.raw_dir, exist_ok=True)
+        os.makedirs(self.processed_dir, exist_ok=True)
+        os.makedirs("data/csv", exist_ok=True)  # Create csv directory
+
+    def _generate_filename(self, symbol, start_date, end_date):
+        """Generate a unique filename for the data"""
+        date_str = f"{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}"
+        hash_str = hashlib.md5(f"{symbol}-{date_str}".encode()).hexdigest()[:8]
+        return f"{symbol}_{date_str}_{hash_str}"
+
+    def _save_raw_data(self, symbol, start_date, end_date, content):
+        """Save raw HTML content"""
+        filename = self._generate_filename(symbol, start_date, end_date)
+        filepath = os.path.join(self.raw_dir, f"{filename}.html")
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+    def _format_price(self, value):
+        """Format price with proper separators"""
+        try:
+            formatted = f"{float(value):,.2f}"
+            return formatted.replace(",", "X").replace(".", ",").replace("X", ".")
+        except (ValueError, TypeError):
+            return "0,00"
+
+    def _format_number(self, value):
+        """Format whole numbers"""
+        try:
+            return f"{int(float(value)):,}".replace(",", ".")
+        except (ValueError, TypeError):
+            return "0"
+
+    def _save_to_csv(self, symbol, data):
+        """Save data to CSV format"""
+        columns = ['Date', 'Last trade price', 'Max', 'Min', 'Avg. Price', 
+                  '%chg.', 'Volume', 'Turnover in BEST', 'Total turnover']
+        
+        csv_data = []
+        for row in data:
+            csv_row = [
+                row['date'].strftime('%d.%m.%Y'),
+                self._format_price(row['last_trade_price']),
+                self._format_price(row['max_price']),
+                self._format_price(row['min_price']),
+                self._format_price(row['avg_price']),
+                self._format_price(row['change_percentage']),
+                self._format_number(row['volume']),
+                self._format_number(row['turnover_best']),
+                self._format_number(row['total_turnover'])
+            ]
+            csv_data.append(csv_row)
+
+        df = pd.DataFrame(csv_data, columns=columns)
+        filepath = f"data/csv/{symbol}.csv"
+        df.to_csv(filepath, index=False)
+
+    def _save_processed_data(self, symbol, start_date, end_date, data):
+        """Save processed data as JSON"""
+        filename = self._generate_filename(symbol, start_date, end_date)
+        filepath = os.path.join(self.processed_dir, f"{filename}.json")
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(data, f, default=str, indent=2)
 
     def process(self, input_data, session=None):
         if session is None:
@@ -36,6 +106,7 @@ class DataFetcherFilter:
                   f"from {start_date} to {end_date}")
 
             # Add exponential backoff for retries
+            response_content = None
             for attempt in range(3):
                 try:
                     request_start = time.time()
@@ -45,18 +116,23 @@ class DataFetcherFilter:
                     print(f"[{datetime.now().strftime('%H:%M:%S.%f')}] Request for {symbol} completed in {request_duration:.2f}s "
                           f"(Status: {response.status_code})")
                     response.raise_for_status()
+                    response_content = response.text
+                    self._save_raw_data(symbol, start_date, end_date, response_content)
                     break
                 except requests.exceptions.RequestException as e:
                     print(f"[{datetime.now().strftime('%H:%M:%S.%f')}] Request failed for {symbol} (attempt {attempt + 1}): {e}")
-                    if attempt == 2:  # Last attempt
+                    if attempt == 2:
                         raise
                     wait_time = (2 ** attempt) * 0.5
                     print(f"[{datetime.now().strftime('%H:%M:%S.%f')}] Waiting {wait_time}s before retry")
                     time.sleep(wait_time)
 
+            if not response_content:
+                return []
+
             parse_start = time.time()
             print(f"[{datetime.now().strftime('%H:%M:%S.%f')}] Parsing response for {symbol}")
-            soup = BeautifulSoup(response.content, 'html.parser')
+            soup = BeautifulSoup(response_content, 'html.parser')
             table = soup.find('table')
             if not table:
                 print(f"[{datetime.now().strftime('%H:%M:%S.%f')}] No data found for {symbol}")
@@ -79,6 +155,10 @@ class DataFetcherFilter:
                 print(f"[{datetime.now().strftime('%H:%M:%S.%f')}] Batch {i//batch_size + 1} for {symbol} "
                       f"processed in {batch_duration:.2f}s")
 
+            if data:
+                self._save_processed_data(symbol, start_date, end_date, data)
+                self._save_to_csv(symbol, data)
+
             parse_duration = time.time() - parse_start
             print(f"[{datetime.now().strftime('%H:%M:%S.%f')}] Completed parsing {symbol} in {parse_duration:.2f}s - "
                   f"Found {len(data)} records")
@@ -89,6 +169,7 @@ class DataFetcherFilter:
             return []
 
     def _process_rows(self, rows, symbol):
+        """Process table rows into structured data"""
         batch_data = []
         for row in rows:
             try:
@@ -120,12 +201,14 @@ class DataFetcherFilter:
         return session
 
     def parse_date(self, date_str):
+        """Parse date string to date object"""
         try:
             return datetime.strptime(date_str, '%m/%d/%Y').date()
         except:
             return None
 
     def parse_number(self, value):
+        """Parse number strings to float"""
         try:
             clean_value = value.strip().replace(',', '').replace('%', '')
             if not clean_value:
