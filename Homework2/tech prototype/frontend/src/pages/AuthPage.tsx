@@ -20,20 +20,22 @@ const AuthPage = () => {
     
     try {
       if (isLogin) {
-        const response = await axios.post('http://localhost:8000/api/auth/login', {
+        await axios.post('http://localhost:8000/api/auth/login', {
           email: formData.email,
           password: formData.password
         });
+        
+        navigate('/home');
         toast.success('Login successful!');
-        navigate('/stocks');
+        
       } else {
-        // Check if passwords match for registration
+        // Your existing registration code...
         if (formData.password !== formData.confirmPassword) {
           toast.error('Passwords do not match!');
           return;
         }
         
-        const response = await axios.post('http://localhost:8000/api/auth/register', {
+        await axios.post('http://localhost:8000/api/auth/register', {
           email: formData.email,
           password: formData.password,
           full_name: formData.fullName

@@ -4,6 +4,7 @@ from sqlalchemy import text
 from app.db.database import get_db
 from typing import List
 from datetime import datetime
+from app.models.stock import WishlistItem
 
 router = APIRouter()
 
@@ -20,10 +21,8 @@ def get_symbols(db: Session = Depends(get_db)):
 @router.get("/market-overview")
 def get_market_overview(db: Session = Depends(get_db)):
     try:
-        # Get data for the last 30 days
         query = text("""
             WITH LastTrades AS (
-                -- Get the last trade for each symbol
                 SELECT 
                     symbol,
                     last_trade_price as current_price,
@@ -34,7 +33,6 @@ def get_market_overview(db: Session = Depends(get_db)):
                 WHERE date >= CURRENT_DATE - INTERVAL '30 days'
             ),
             FirstTrades AS (
-                -- Get the first trade in the period for each symbol
                 SELECT 
                     symbol,
                     last_trade_price as start_price,
@@ -44,7 +42,6 @@ def get_market_overview(db: Session = Depends(get_db)):
                 WHERE date >= CURRENT_DATE - INTERVAL '30 days'
             ),
             VolumeStats AS (
-                -- Calculate total volume and turnover for the period
                 SELECT 
                     symbol,
                     SUM(volume) as total_volume,
@@ -84,6 +81,81 @@ def get_market_overview(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/popular-stocks")
+def get_popular_stocks(db: Session = Depends(get_db)):
+    try:
+        query = text("""
+            SELECT DISTINCT ON (s.symbol)
+                s.symbol,
+                s.last_trade_price,
+                s.change_percentage,
+                s.date
+            FROM stock_data s
+            ORDER BY s.symbol, s.date DESC
+            LIMIT 6
+        """)
+        
+        result = db.execute(query)
+        stocks = [{
+            "symbol": row[0],
+            "companyName": row[0],  # Using symbol as company name for now
+            "price": float(row[1]),
+            "changePercentage": float(row[2]) if row[2] is not None else 0.0
+        } for row in result]
+        
+        return stocks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/wishlist/{symbol}")
+def add_to_wishlist(symbol: str, db: Session = Depends(get_db)):
+    try:
+        # Check if already exists
+        existing = db.query(WishlistItem).filter(WishlistItem.symbol == symbol).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Symbol already in wishlist")
+            
+        wishlist_item = WishlistItem(symbol=symbol)
+        db.add(wishlist_item)
+        db.commit()
+        return {"message": "Added to wishlist"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/wishlist/{symbol}")
+def remove_from_wishlist(symbol: str, db: Session = Depends(get_db)):
+    try:
+        db.query(WishlistItem).filter(WishlistItem.symbol == symbol).delete()
+        db.commit()
+        return {"message": "Removed from wishlist"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/wishlist")
+def get_wishlist(db: Session = Depends(get_db)):
+    try:
+        query = text("""
+            SELECT DISTINCT ON (s.symbol)
+                s.symbol,
+                s.last_trade_price,
+                s.change_percentage
+            FROM stock_data s
+            JOIN wishlist w ON s.symbol = w.symbol
+            ORDER BY s.symbol, s.date DESC
+        """)
+        
+        result = db.execute(query)
+        stocks = [{
+            "symbol": row[0],
+            "companyName": row[0],  # Using symbol as company name for now
+            "price": float(row[1]),
+            "changePercentage": float(row[2]) if row[2] is not None else 0.0
+        } for row in result]
+        
+        return stocks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 @router.get("/data/{symbol}")
 def get_stock_data(
     symbol: str, 
