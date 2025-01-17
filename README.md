@@ -44,8 +44,56 @@ Implementation of a data pipeline using Pipe and Filter architecture to collect 
 - Processing Time Range: 5.15s - 27.56s
 - Average Memory Usage: 111.14MB
 
-## Homework 2
-*To be implemented*
+## Homework 2: Web Application Development
+
+### Overview
+Development of a web application for visualizing and analyzing Macedonian Stock Exchange data using modern web technologies and a microservices architecture.
+
+### Implementation Details
+- **Frontend**: React (Vite) + TypeScript + Tailwind CSS
+- **Backend**: FastAPI + PostgreSQL
+- **Architecture**: Microservices architecture with RESTful APIs
+
+### Key Features
+1. **Authentication System**
+   - User registration and login
+   - Secure password handling
+   - Session management
+
+2. **Stock Data Visualization**
+   - Interactive line charts using Recharts
+   - Historical price viewing
+   - Volume and turnover analysis
+   - Responsive data tables
+
+3. **Market Overview Dashboard**
+   - Monthly top gainers and losers
+   - Volume leaders visualization
+   - Market statistics summary
+   - Trading activity metrics
+
+### Technical Stack
+- **Frontend Libraries**:
+  - Recharts for data visualization
+  - Lucide icons for UI elements
+  - Tailwind CSS for styling
+  - TypeScript for type safety
+
+- **Backend Features**:
+  - RESTful API endpoints
+  - Database integration
+  - Data aggregation services
+  - Error handling and validation
+
+### Project Demo
+Watch our technical prototype demonstration: [YouTube Demo](https://youtu.be/RJ8Wc3pdDs8)
+
+### Current Progress
+- Implemented user authentication
+- Created responsive navigation system
+- Developed stock data visualization components
+- Built market overview dashboard
+- Integrated backend APIs with frontend
 
 ## Homework 3
 *To be implemented*
