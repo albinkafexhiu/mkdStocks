@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { 
   Home,
   Search,
@@ -9,12 +9,13 @@ import {
   LogOut
 } from 'lucide-react';
 
-const Navbar = ({ children }) => {
+const Navbar = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [
+    { path: '/home', icon: BarChart2, label: 'Home' },
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/stocks', icon: Search, label: 'Search Stocks' },
     { path: '/analysis', icon: BarChart2, label: 'Analysis' },
@@ -25,7 +26,6 @@ const Navbar = ({ children }) => {
   };
 
   const handleLogout = () => {
-    // Add logout logic here
     navigate('/');
   };
 
@@ -59,7 +59,7 @@ const Navbar = ({ children }) => {
               className={`
                 flex items-center gap-3 p-3 rounded-lg transition-colors
                 ${isActivePath(item.path)
-                  ? 'bg-primary-50 text-primary-700'
+                  ? 'bg-blue-50 text-blue-700'
                   : 'text-gray-700 hover:bg-gray-100'
                 }
               `}
@@ -89,7 +89,7 @@ const Navbar = ({ children }) => {
         ${isExpanded ? 'ml-64' : 'ml-20'}
       `}>
         <div className="p-6">
-          {children}
+          <Outlet />
         </div>
       </main>
     </div>
