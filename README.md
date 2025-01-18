@@ -120,8 +120,27 @@ Implementation of technical analysis tools that process historical stock data to
 - **Data Processing**: Automated indicator calculations
 - **Performance**: Optimized for real-time analysis
 
-### Fundamental Analysis
-*To be implemented*
+### Fundamental Analysis (Completed)
+Implementation of news-based sentiment analysis for market trend prediction using Natural Language Processing.
+
+#### Features
+1. **News Scraping System**
+   - Automated scraping from major Macedonian financial news sources
+   - Multi-source integration (Kapital.mk, BiznisInfo.mk)
+   - Efficient content extraction and processing
+   - Rate-limited requests with retry mechanisms
+
+2. **Sentiment Analysis Engine**
+   - Machine translation (Macedonian to English) using MarianMT
+   - Financial-specific sentiment analysis using FinBERT
+   - Sentiment score calculation and trading signal generation
+   - Market-wide sentiment aggregation
+
+3. **Data Processing Pipeline**
+   - Automated news collection and processing
+   - Real-time sentiment analysis
+   - Historical sentiment tracking
+   - Company-specific and market-wide analysis
 
 ### LSTM Price Prediction
 *To be implemented*
