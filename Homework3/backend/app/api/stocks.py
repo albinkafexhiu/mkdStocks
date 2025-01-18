@@ -202,3 +202,48 @@ def get_stock_data(
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/technical-analysis/{symbol}")
+def get_technical_analysis(symbol: str,
+                          start_date: str,
+                          end_date: str,
+                          db: Session = Depends(get_db)):
+    # 1) Query DB
+    query = text("""
+        SELECT date, last_trade_price, volume
+        FROM stock_data
+        WHERE symbol = :symbol
+          AND date BETWEEN :start_date AND :end_date
+        ORDER BY date ASC
+    """)
+    rows = db.execute(query, {
+        "symbol": symbol,
+        "start_date": start_date,
+        "end_date": end_date
+    }).fetchall()
+
+    # 2) DataFrame
+    df = pd.DataFrame(rows, columns=["date", "close", "volume"])
+    if df.empty:
+        return {"data": [], "message": "No data for this symbol in the given range."}
+
+    df['date'] = pd.to_datetime(df['date'])
+    df.set_index('date', inplace=True)
+
+    # 3) Calculate indicators (just an example for RSI & SMA)
+    df['rsi'] = ta.momentum.rsi(df['close'], window=14)
+    df['sma_20'] = ta.trend.sma_indicator(df['close'], window=20)
+
+    # 4) Basic signals
+    def rsi_signal(rsi_val: float) -> str:
+        if rsi_val < 30:
+            return "Buy"
+        elif rsi_val > 70:
+            return "Sell"
+        else:
+            return "Hold"
+    df['rsi_signal'] = df['rsi'].apply(rsi_signal)
+
+    # 5) Convert to JSON
+    data = df.reset_index().to_dict(orient='records')
+    return {"data": data}

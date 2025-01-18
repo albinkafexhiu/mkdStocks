@@ -5,6 +5,7 @@ import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
 import StockDataViewer from './components/StockDataViewer';
+import AnalysisPage from './pages/AnalysisPage';
 
 function App() {
   return (
@@ -41,6 +42,8 @@ function App() {
           <Route path="/stocks" element={<StockDataViewer />} />
           <Route path="/stocks/:symbol" element={<StockDataViewer />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/analysis" element={<AnalysisPage />} />
+
         </Route>
         
         {/* Redirect unknown routes to auth page */}
