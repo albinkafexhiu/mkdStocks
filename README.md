@@ -97,6 +97,9 @@ Watch our technical prototype demonstration: [YouTube Demo](https://youtu.be/RJ8
 
 ## Homework 3: Stock Market Analysis Tools
 
+### Homework 3 Demo
+Watch our technical prototype demonstration: [YouTube Demo](https://youtu.be/WJCrvPGr7b4)
+
 ### Overview
 Implementation of comprehensive analysis tools for the Macedonian Stock Exchange, providing technical, fundamental, and predictive analysis capabilities.
 
