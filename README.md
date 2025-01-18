@@ -95,8 +95,37 @@ Watch our technical prototype demonstration: [YouTube Demo](https://youtu.be/RJ8
 - Built market overview dashboard
 - Integrated backend APIs with frontend
 
-## Homework 3
+## Homework 3: Stock Market Analysis Tools
+
+### Overview
+Implementation of comprehensive analysis tools for the Macedonian Stock Exchange, providing technical, fundamental, and predictive analysis capabilities.
+
+### Technical Analysis (Completed)
+Implementation of technical analysis tools that process historical stock data to identify trading signals.
+
+#### Features
+1. **Technical Indicators**
+   - 5 Oscillators (RSI, Stochastic K/D, Williams %R, CCI, MFI)
+   - 5 Moving Averages (SMA, EMA, WMA, TEMA, WEMA)
+   - Multi-timeframe analysis (daily/weekly/monthly)
+
+2. **Visualization**
+   - Interactive price and indicator charts
+   - Customizable timeframe selection
+   - Real-time signal generation
+
+#### Implementation Details
+- **Backend**: FastAPI + pandas + ta library
+- **Frontend**: React + Recharts
+- **Data Processing**: Automated indicator calculations
+- **Performance**: Optimized for real-time analysis
+
+### Fundamental Analysis
 *To be implemented*
+
+### LSTM Price Prediction
+*To be implemented*
+
 
 ## Homework 4
 *To be implemented*
