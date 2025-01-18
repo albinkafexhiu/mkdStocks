@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth
-from app.api import stocks
-from app.api import technical
+from app.api import auth, stocks, technical, fundamental  
 app = FastAPI()
 
 app.add_middleware(
@@ -16,7 +14,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(stocks.router, prefix="/api/stocks", tags=["stocks"])
 app.include_router(technical.router, prefix="/api/analysis", tags=["analysis"])
-
+app.include_router(fundamental.router, prefix="/api/fundamental", tags=["fundamental"])  
 
 @app.get("/")
 async def root():

@@ -19,6 +19,9 @@ const Navbar = () => {
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/stocks', icon: Search, label: 'Search Stocks' },
     { path: '/analysis', icon: BarChart2, label: 'Analysis' },
+    { path: '/fundamental', icon: BarChart2, label: 'Fundamental Analysis' },
+
+    
   ];
 
   const isActivePath = (path: string) => {

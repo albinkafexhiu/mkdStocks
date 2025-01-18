@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
 import StockDataViewer from './components/StockDataViewer';
 import AnalysisPage from './pages/AnalysisPage';
+import FundamentalAnalysisPage from './pages/FundamentalAnalysisPage';
 
 function App() {
   return (
@@ -43,6 +44,8 @@ function App() {
           <Route path="/stocks/:symbol" element={<StockDataViewer />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/analysis" element={<AnalysisPage />} />
+          <Route path="/fundamental" element={<FundamentalAnalysisPage />} />
+
 
         </Route>
         
