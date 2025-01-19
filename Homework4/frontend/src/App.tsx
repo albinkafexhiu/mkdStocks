@@ -4,7 +4,6 @@ import Navbar from './components/ui/Navbar';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
-import StockDataViewer from './components/StockDataViewer';
 import AnalysisPage from './pages/AnalysisPage';
 import FundamentalAnalysisPage from './pages/FundamentalAnalysisPage';
 import StockPage from './pages/StockPage';

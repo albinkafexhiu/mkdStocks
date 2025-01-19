@@ -15,6 +15,8 @@ export const useSymbols = (initialSymbol?: string) => {
         setSymbols(response.data);
       } catch (error) {
         toast.error('Failed to fetch stock symbols');
+        console.error("Analysis error:", error);
+
       } finally {
         setLoading(false);
       }
