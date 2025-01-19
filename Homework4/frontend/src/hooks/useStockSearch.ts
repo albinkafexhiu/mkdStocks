@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios, { AxiosError } from 'axios';
 import { SearchStock } from '../types/stock';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const useStockSearch = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<SearchStock[]>([]);
@@ -9,7 +11,7 @@ export const useStockSearch = () => {
 
   const handleSearch = async (): Promise<void> => {
     try {
-      const response = await axios.get<string[]>('http://localhost:8000/api/stocks/symbols');
+      const response = await axios.get<string[]>(`${API_URL}/stocks/symbols`);
       const filteredStocks = response.data.filter((symbol) =>
         symbol.toLowerCase().includes(searchQuery.toLowerCase())
       );

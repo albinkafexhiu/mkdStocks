@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    networks:
+      - mse-network
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: lali
+      POSTGRES_DB: dians
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database_backup.sql:/docker-entrypoint-initdb.d/database_backup.sql  # Changed this line to match your structure
+      - ./stock_data.csv:/stock_data.csv    # Add these lines
+      - ./wishlist.csv:/wishlist.csv
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    networks:
+      - mse-network
+    environment:
+      DB_USER: postgres
+      DB_PASSWORD: lali
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: dians
+      DB_SSL_MODE: disable
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  frontend:
+    build: ./frontend
+    networks:
+      - mse-network
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://backend:8000/api
+    depends_on:
+      - backend
+
+networks:
+  mse-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

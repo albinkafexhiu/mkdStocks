@@ -3,6 +3,7 @@ import axios from 'axios';
 import { StockData } from '../types/stockdata';  
 import toast from 'react-hot-toast';
 
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const useStockData = () => {
   const [startDate, setStartDate] = useState('');
@@ -15,7 +16,7 @@ export const useStockData = () => {
     
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:8000/api/stocks/data/${symbol}`, {
+      const response = await axios.get(`${API_URL}/stocks/data/${symbol}`, {
         params: { 
           start_date: startDate,  
           end_date: endDate 

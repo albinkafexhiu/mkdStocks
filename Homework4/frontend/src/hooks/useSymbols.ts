@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const useSymbols = (initialSymbol?: string) => {
   const [symbols, setSymbols] = useState<string[]>([]);
   const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol || '');
@@ -11,12 +13,11 @@ export const useSymbols = (initialSymbol?: string) => {
   useEffect(() => {
     const fetchSymbols = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/stocks/symbols');
+        const response = await axios.get(`${API_URL}/stocks/symbols`);
         setSymbols(response.data);
       } catch (error) {
         toast.error('Failed to fetch stock symbols');
         console.error("Analysis error:", error);
-
       } finally {
         setLoading(false);
       }

@@ -3,6 +3,8 @@ import axios, { AxiosError } from 'axios';
 import { Stock } from '../types/stock';
 import toast from 'react-hot-toast';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const useStocks = () => {
   const [popularStocks, setPopularStocks] = useState<Stock[]>([]);
   const [wishlistStocks, setWishlistStocks] = useState<Stock[]>([]);
@@ -11,8 +13,8 @@ export const useStocks = () => {
   const fetchData = async (): Promise<void> => {
     try {
       const [popularResponse, wishlistResponse] = await Promise.all([
-        axios.get<Stock[]>('http://localhost:8000/api/stocks/popular-stocks'),
-        axios.get<Stock[]>('http://localhost:8000/api/stocks/wishlist')
+        axios.get<Stock[]>(`${API_URL}/stocks/popular-stocks`),
+        axios.get<Stock[]>(`${API_URL}/stocks/wishlist`)
       ]);
 
       setPopularStocks(popularResponse.data);
@@ -28,7 +30,7 @@ export const useStocks = () => {
 
   const handleAddToWishlist = async (symbol: string): Promise<void> => {
     try {
-      await axios.post(`http://localhost:8000/api/stocks/wishlist/${symbol}`);
+      await axios.post(`${API_URL}/stocks/wishlist/${symbol}`);
       toast.success('Added to wishlist');
       await fetchData();
     } catch (error) {
@@ -40,7 +42,7 @@ export const useStocks = () => {
 
   const handleRemoveFromWishlist = async (symbol: string): Promise<void> => {
     try {
-      await axios.delete(`http://localhost:8000/api/stocks/wishlist/${symbol}`);
+      await axios.delete(`${API_URL}/stocks/wishlist/${symbol}`);
       toast.success('Removed from wishlist');
       await fetchData();
     } catch (error) {

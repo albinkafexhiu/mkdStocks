@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import axios, { AxiosError } from 'axios';
 import { MarketData, MarketStats } from '../types/market';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
+
 export const useMarketData = () => {
   const [marketData, setMarketData] = useState<MarketData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -9,7 +12,7 @@ export const useMarketData = () => {
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
-        const response = await axios.get<MarketData[]>('http://localhost:8000/api/stocks/market-overview');
+        const response = await axios.get<MarketData[]>(`${API_URL}/stocks/market-overview`);
         setMarketData(response.data);
       } catch (error) {
         const axiosError = error as AxiosError;
