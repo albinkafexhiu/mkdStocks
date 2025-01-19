@@ -149,5 +149,26 @@ Implementation of news-based sentiment analysis for market trend prediction usin
 *To be implemented*
 
 
-## Homework 4
-*To be implemented*
+## Homework 4: Design Patterns and Microservices
+
+### Design Patterns Implementation
+
+#### 1. Technical Analysis Refactoring
+Started refactoring the technical analysis component using the Strategy Pattern combined with Factory Pattern for better code organization and maintainability. The implementation includes:
+
+- Strategy Pattern for technical indicators (oscillators and moving averages)
+- Factory Pattern for indicator creation and management
+- Organized code structure under `app/services/technical/`
+- Maintained all existing functionality while improving code quality
+- Enhanced extensibility for adding new technical indicators
+
+#### 2. News Analysis System
+Refactored the news and sentiment analysis system using Template Method and Chain of Responsibility patterns. The implementation includes:
+
+- Template Method Pattern for standardizing news scraping from different sources
+- Chain of Responsibility for processing pipeline (scraping → translation → sentiment analysis)
+- Organized modular structure under `app/services/news/`
+- Improved error handling and maintainability
+- Simplified process of adding new news sources or processing steps
+
+*More implementations coming soon...*

@@ -1,11 +1,14 @@
 from fastapi import APIRouter, HTTPException
-from typing import Dict, Any, List
+from typing import Dict, Any
+from app.services.news.news_service import NewsService
+from app.data.companies import COMPANY_SYMBOLS
 import json
 import glob
 from datetime import datetime
-from app.data.companies import COMPANY_SYMBOLS
 
 router = APIRouter()
+
+news_service = NewsService()  # Initialize our new service
 
 def get_latest_news_file() -> str:
     """Get the most recent analyzed news file"""
@@ -18,13 +21,30 @@ def get_symbol_for_company(company_name: str) -> str:
     """Get stock symbol for company name"""
     return COMPANY_SYMBOLS.get(company_name, company_name)
 
+@router.post("/analyze/{symbol}")
+async def analyze_company_news(symbol: str):
+    """Trigger new analysis for a company"""
+    try:
+        # Find company name from symbol
+        company_name = None
+        for name, sym in COMPANY_SYMBOLS.items():
+            if sym == symbol:
+                company_name = name
+                break
+        
+        if not company_name:
+            raise HTTPException(status_code=404, detail="Company not found")
+
+        # Run analysis
+        news_service.process_news([company_name])
+        return {"message": "Analysis completed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/news/{symbol}")
 def get_company_news(symbol: str) -> Dict[str, Any]:
-    """
-    Get analyzed news and sentiment for a specific company symbol
-    """
+    """Get analyzed news for a specific company symbol"""
     try:
-        # Load latest analyzed news
         with open(get_latest_news_file(), 'r', encoding='utf-8') as f:
             all_news = json.load(f)
         
@@ -32,7 +52,6 @@ def get_company_news(symbol: str) -> Dict[str, Any]:
         company_news = None
         found_company = None
         
-        # Look through all companies to find matching symbol
         for company_name, data in all_news.items():
             if get_symbol_for_company(company_name) == symbol:
                 company_news = data
