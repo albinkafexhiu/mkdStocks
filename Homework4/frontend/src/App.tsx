@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import StockDataViewer from './components/StockDataViewer';
 import AnalysisPage from './pages/AnalysisPage';
 import FundamentalAnalysisPage from './pages/FundamentalAnalysisPage';
+import StockPage from './pages/StockPage';
 
 function App() {
   return (
@@ -40,8 +41,8 @@ function App() {
         {/* Protected routes wrapped in Navbar */}
         <Route element={<Navbar />}>
           <Route path="/home" element={<HomePage />} />
-          <Route path="/stocks" element={<StockDataViewer />} />
-          <Route path="/stocks/:symbol" element={<StockDataViewer />} />
+          <Route path="/stocks" element={<StockPage />} />
+          <Route path="/stocks/:symbol" element={<StockPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/analysis" element={<AnalysisPage />} />
           <Route path="/fundamental" element={<FundamentalAnalysisPage />} />
